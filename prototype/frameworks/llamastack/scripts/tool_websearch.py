@@ -1,58 +1,39 @@
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types.agent_create_params import AgentConfig
 from termcolor import cprint
 import os
-import sys
+from llama_stack_client import LlamaStackClient
 from dotenv import load_dotenv
 
-# Load .env file
 load_dotenv()
 
-# Access the environment variables
 inference_model = os.getenv("INFERENCE_MODEL")
-llama_stack_port = os.getenv("LLAMA_STACK_PORT")
-ollama_url = os.getenv("OLLAMA_URL")
-tavily_search_api_key = os.environ["TAVILY_SEARCH_API_KEY"]
-
+tavily_search_api_key = os.getenv("TAVILY_SEARCH_API_KEY")
+endpoint = os.getenv("LLAMA_STACK_ENDPOINT")
+port = os.getenv("LLAMA_STACK_PORT")
+base_url = endpoint if endpoint else f"http://localhost:{port}"
 print(f"Model: {inference_model}")
-print(f"Llama Stack Port: {llama_stack_port}")
-print(f"Ollama URL: {ollama_url}")
 
-def create_http_client():
-    from llama_stack_client import LlamaStackClient
-
-    return LlamaStackClient(
-        base_url=f"http://localhost:{llama_stack_port}", # return LlamaStackClient(base_url="http://localhost:8321", timeout = 6000)
-        provider_data = {"tavily_search_api_key": tavily_search_api_key}  # according to https://llama-stack.readthedocs.io/en/latest/building_applications/tools.html
-    )
-
-# Initialize the Llama Stack client, choosing between library or HTTP client
-client = create_http_client()  
-
-# Register Search tool group
-# according to https://llama-stack.readthedocs.io/en/latest/building_applications/tools.html
-client.toolgroups.register( 
-    toolgroup_id="builtin::websearch",
-    provider_id="tavily-search",
-    args={"max_results": 5},
+client =  LlamaStackClient(
+        base_url=base_url,
+        provider_data = {"tavily_search_api_key": tavily_search_api_key}
 )
 
-print(client.toolgroups.list())
-
-# Below is modified from websearch example from https://colab.research.google.com/github/meta-llama/llama-stack/blob/main/docs/getting_started.ipynb
-agent_config = AgentConfig(
-    model=os.getenv("INFERENCE_MODEL"),
-    instructions="You are a helpful web search assistant, you can use websearch tool for unknown queries.",
-    toolgroups=["builtin::websearch"],
-    input_shields=[],
-    output_shields=[],
-    enable_session_persistence=False,
+agent = Agent(
+    client, 
+    model=inference_model,
+    instructions=(
+        "You are a highly knowledgeable and helpful web search assistant. "
+        "Your primary goal is to provide accurate and reliable information to the user. "
+        "Whenever you encounter a query, make sure to use the websearch tools specifically use travil search tool to look up the most current and precise information available. "
+        "name the tool called."
+    ),
+    tools=["builtin::websearch"],
 )
-agent = Agent(client, agent_config)
+
 user_prompts = [
     "Hello",
-    "Which teams played in the NBA western conference finals of 2024",
+    "How did the USA perform in the last Olympics?",
 ]
 
 session_id = agent.create_session("test-session")

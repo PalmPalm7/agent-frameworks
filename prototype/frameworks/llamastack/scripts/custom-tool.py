@@ -44,9 +44,11 @@ def calculator(x: str, y: str, operation: str) -> dict:
         return {"success": False, "error": str(e)}
 
 async def run_main():
-    client = LlamaStackClient(
-        base_url=f"http://localhost:{os.getenv('LLAMA_STACK_PORT')}"
-    )
+    endpoint = os.getenv("LLAMA_STACK_ENDPOINT")
+    port = os.getenv("LLAMA_STACK_PORT")
+    base_url = endpoint if endpoint else f"http://localhost:{port}"
+
+    client = LlamaStackClient(base_url=base_url)
 
     logger.debug("Setting up agent config...")
 

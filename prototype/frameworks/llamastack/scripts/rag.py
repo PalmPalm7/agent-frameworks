@@ -11,13 +11,13 @@ from llama_stack_client.types import Document
 load_dotenv()
 
 # Configuration
-LLAMA_STACK_PORT = os.environ.get("LLAMA_STACK_PORT", "8321")
+LLAMA_STACK_PORT = os.environ.get("LLAMA_STACK_PORT", "80")
 INFERENCE_MODEL = os.environ.get("INFERENCE_MODEL", "meta-llama/Llama-3.2-3B-Instruct")
 
-FILE_PATHS = ["document/cake.rst", 
-              "document/car.rst", 
-              "document/house.rst", 
-              "document/technology.rst"]
+FILE_PATHS = ["documents/cake.rst", 
+              "documents/car.rst", 
+              "documents/house.rst", 
+              "documents/technology.rst"]
 VECTOR_DB_PROVIDER = "faiss"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 EMBEDDING_DIMENSION = 384
@@ -28,8 +28,13 @@ MAX_CHUNKS = 2
 
 
 def create_http_client():
+    """Creates an HTTP client for communicating with the Llama Stack server."""
     from llama_stack_client import LlamaStackClient
-    return LlamaStackClient(base_url=f"http://localhost:{LLAMA_STACK_PORT}")
+    endpoint = os.getenv("LLAMA_STACK_ENDPOINT")
+    base_url = endpoint if endpoint else f"http://localhost:{LLAMA_STACK_PORT}"
+    return LlamaStackClient(
+        base_url=base_url
+    )
 
 
 def create_library_client(template="ollama"):
@@ -39,7 +44,7 @@ def create_library_client(template="ollama"):
     return client
 
 
-client = create_library_client()  # or create_http_client() depending on the environment
+client = create_http_client()  # or create_http_client() depending on the environment
 
 # Load documents for RAG
 documents = [

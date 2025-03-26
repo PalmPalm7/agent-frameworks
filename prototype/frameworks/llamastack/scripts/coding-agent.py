@@ -1,6 +1,7 @@
 import os
 import sys
 from termcolor import cprint  # Used for colored terminal output
+from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient  # Main client for Llama Stack
 from llama_stack_client.lib.agents.agent import Agent  # Agent class for AI interactions
 from llama_stack_client.lib.agents.event_logger import EventLogger  # Event logging utility
@@ -8,13 +9,17 @@ from llama_stack_client.types.agent_create_params import AgentConfig  # Configur
 from llama_stack_client.types import Document  # Document type for Llama Stack interactions
 import uuid  # For generating unique identifiers
 
+load_dotenv()
+
 
 def create_http_client():
     """Creates an HTTP client for communicating with the Llama Stack server."""
     from llama_stack_client import LlamaStackClient
-
+    endpoint = os.getenv("LLAMA_STACK_ENDPOINT")
+    port = os.getenv("LLAMA_STACK_PORT")
+    base_url = endpoint if endpoint else f"http://localhost:{port}"
     return LlamaStackClient(
-        base_url=f"http://localhost:{os.environ['LLAMA_STACK_PORT']}"
+        base_url=base_url
     )
 
 
